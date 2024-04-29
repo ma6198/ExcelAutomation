@@ -1,37 +1,38 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <!-- Office JavaScript API -->
-    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
-    <style>
-        body { font-family: Arial, sans-serif; }
-    </style>
-</head>
-<body>
-    <p>This add-in will highlight changed cells in red.</p>
+    <title>Excel Add-in</title>
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
     <script>
-        Office.onReady((info) => {
-            // Check that we loaded into Excel
+        Office.onReady(info => {
             if (info.host === Office.HostType.Excel) {
                 Excel.run(async context => {
                     const sheet = context.workbook.worksheets.getActiveWorksheet();
-                    sheet.onChanged.add(onChanged);
+                    // Register an event handler for the onChanged event.
+                    sheet.onChanged.add(handleChange);
+                    
                     await context.sync();
-
-                    console.log("Event handler for onChanged added.");
-                });
+                    
+                    console.log("Event handler for cell changes registered.");
+                }).catch(error => console.error(error));
             }
         });
 
-        async function onChanged(eventArgs) {
-            await Excel.run(async context => {
+        async function handleChange(eventArgs) {
+            Excel.run(async context => {
+                // Get the range that has changed
                 const changedRange = context.workbook.worksheets.getActiveWorksheet().getRange(eventArgs.address);
+                // Set the fill color of the changed range to red
                 changedRange.format.fill.color = "red";
                 await context.sync();
-
-                console.log(`Cells in range ${eventArgs.address} have been highlighted.`);
-            });
+                
+                console.log(`Changed range ${eventArgs.address} highlighted in red.`);
+            }).catch(error => console.error(error));
         }
     </script>
+</head>
+<body>
+    <h1>Excel Automation Add-in</h1>
+    <p>Changes to any cell will be highlighted in red.</p>
 </body>
 </html>
