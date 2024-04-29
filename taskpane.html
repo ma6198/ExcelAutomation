@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Office JavaScript API -->
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; }
+    </style>
+</head>
+<body>
+    <p>This add-in will highlight changed cells in red.</p>
+    <script>
+        Office.onReady((info) => {
+            // Check that we loaded into Excel
+            if (info.host === Office.HostType.Excel) {
+                Excel.run(async context => {
+                    const sheet = context.workbook.worksheets.getActiveWorksheet();
+                    sheet.onChanged.add(onChanged);
+                    await context.sync();
+
+                    console.log("Event handler for onChanged added.");
+                });
+            }
+        });
+
+        async function onChanged(eventArgs) {
+            await Excel.run(async context => {
+                const changedRange = context.workbook.worksheets.getActiveWorksheet().getRange(eventArgs.address);
+                changedRange.format.fill.color = "red";
+                await context.sync();
+
+                console.log(`Cells in range ${eventArgs.address} have been highlighted.`);
+            });
+        }
+    </script>
+</body>
+</html>
