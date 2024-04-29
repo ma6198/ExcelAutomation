@@ -1,4 +1,3 @@
-<!-- Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT License. -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -7,9 +6,8 @@
 </head>
 
 <body>
-    <p>This add-in will set cell A1 to the value 'Hello world!'.</p>
-    <button id="helloButton">Say hello</button>
-
+    <p>This add-in will set cell A1 to the value 'Hello world!' and color all non-empty cells red.</p>
+    <button id="helloButton">Say hello and color cells</button>
     <!-- The following image URL tracks diagnostic data for this sample add-in. Please remove the image tag if you reuse this sample in your own code project. -->
     <img src="https://pnptelemetry.azurewebsites.net/pnp-officeaddins/samples/excel-add-in-hello-world-run" />
 </body>
@@ -18,18 +16,38 @@
     Office.onReady((info) => {
         // Check that we loaded into Excel
         if (info.host === Office.HostType.Excel) {
-            document.getElementById("helloButton").onclick = sayHello;
+            document.getElementById("helloButton").onclick = performActions;
         }
     });
 
-    function sayHello() {
-        Excel.run(context => {
+    function performActions() {
+        Excel.run(async context => {
+            const sheet = context.workbook.worksheets.getActiveWorksheet();
 
             // Insert text 'Hello world!' into cell A1.
-            context.workbook.worksheets.getActiveWorksheet().getRange("A1").values = [['Hello world!']];
+            const cellA1 = sheet.getRange("A1");
+            cellA1.values = [['Hello world!']];
 
-            // sync the context to run the previous API call, and return.
-            return context.sync();
+            // Color all non-empty cells red
+            const usedRange = sheet.getUsedRange();
+            const values = usedRange.load("values");
+            await context.sync();
+
+            for (let row = 0; row < values.values.length; row++) {
+                for (let col = 0; col < values.values[row].length; col++) {
+                    if (values.values[row][col] !== "") {
+                        const cell = usedRange.getCell(row, col);
+                        cell.format.fill.color = "red";
+                    }
+                }
+            }
+
+            await context.sync();
+        }).catch(error => {
+            console.error("Error: " + error);
+            if (error instanceof OfficeExtension.Error) {
+                console.log("Debug info: " + JSON.stringify(error.debugInfo));
+            }
         });
     }
 </script>
